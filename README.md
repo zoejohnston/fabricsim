@@ -1,2 +1,2 @@
-# fabricsim
-Yarn-level Cloth Simulator
+# Yarn-level Cloth Simulator
+Working on porting the simulator to [Cinder](https://libcinder.org/)!
