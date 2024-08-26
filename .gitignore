@@ -1,0 +1,9 @@
+include/
+lib/
+source/.vs
+source/x64
+source/glad.c
+source/FabricSim.vcxproj
+source/FabricSim.vcxproj.filters
+source/FabricSim.vcxproj.user
+source/FabricSim.sln
