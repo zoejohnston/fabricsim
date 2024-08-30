@@ -4,6 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include "Fabric.h"
 
 /*  Code modified from learnopengl.com
  *  Zoe Johnston, 2024
@@ -14,8 +15,9 @@ float y_angle = 0.0;
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+const unsigned int WIDTH = 20;
 
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(0.0f, 20.0f, 0.0f);
 
 const char* vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -60,13 +62,13 @@ void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        x_angle += 0.5;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         x_angle -= 0.5;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        x_angle += 0.5;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        y_angle += 0.5;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         y_angle -= 0.5;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        y_angle += 0.5;
 }
 
 void createAndLinkProgram(unsigned int *program) {
@@ -139,20 +141,19 @@ int main() {
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    glEnable(GL_DEPTH_TEST);
+
     unsigned int shaderProgram;
     createAndLinkProgram(&shaderProgram);
 
     // Vertex data
-    float vertices[] = {
-         0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom right
-        -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f  // top left 
-    };
-    unsigned int indices[] = { 
-        0, 1,  // first line
-        1, 2   // second line
-    };
+    unsigned int vertices_size = WIDTH * WIDTH * 6;
+    unsigned int indices_size = (WIDTH - 1) * WIDTH * 4;
+
+    double *vertices = new double[vertices_size];
+    unsigned int *indices = new unsigned int[indices_size];
+    Fabric* sheet = new Fabric(WIDTH, WIDTH, vertices, indices);
+    sheet->fix(10, 10);
 
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -162,14 +163,14 @@ int main() {
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(double) * vertices_size, vertices, GL_DYNAMIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * indices_size, indices, GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double), (void*)(3 * sizeof(double)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -181,7 +182,7 @@ int main() {
 
         // rendering commands
         glClearColor(0.1f, 0.0f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
         glLineWidth(5.0);
@@ -193,7 +194,7 @@ int main() {
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -30.0f));
 
         ptr = glGetUniformLocation(shaderProgram, "projection");
         glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(projection));
@@ -203,12 +204,18 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(x_angle), glm::vec3(1.0, 0.0, 0.0));
         model = glm::rotate(model, glm::radians(y_angle), glm::vec3(0.0, 1.0, 0.0));
+        model = glm::translate(model, glm::vec3(-9.5f, 10.0f, -9.5f));
 
         ptr = glGetUniformLocation(shaderProgram, "model");
         glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(model));
 
+        sheet->step();
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(double) * vertices_size, vertices);
+
         glBindVertexArray(VAO);
-        glDrawElements(GL_LINES, 4, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_LINES, indices_size, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -218,6 +225,9 @@ int main() {
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
+
+    delete[] vertices;
+    delete[] indices;
 
     glfwTerminate();
 	return 0;
