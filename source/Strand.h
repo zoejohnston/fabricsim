@@ -10,8 +10,6 @@ class Strand {
 public:
 	Strand();
 	void init(int num, double len, int warpweft);
-	void display();
-	void display(int index);
 
 	ContactNode** nodes;
 	int* inds;

@@ -10,15 +10,17 @@
  *  Zoe Johnston, 2024
  */
 
-float x_angle = 0.0;
-float y_angle = 0.0;
+float x_angle = 30.0;
+float y_angle = 290.0;
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-const unsigned int WIDTH = 20;
+const unsigned int WIDTH = 30;
 
-glm::vec3 lightPos(0.0f, 20.0f, 0.0f);
+glm::vec3 lightPos(0.0f, 40.0f, 20.0f);
 
+/*  Vertex shader
+ */
 const char* vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aNormal;\n"
@@ -34,6 +36,8 @@ const char* vertexShaderSource = "#version 330 core\n"
     "   Normal = aNormal;\n"
     "}\0";
 
+/*  Fragment shader
+ */
 const char* fragmentShaderSource = "#version 330 core\n"
     "in vec3 FragPos;\n"
     "in vec3 Normal;\n"
@@ -44,9 +48,9 @@ const char* fragmentShaderSource = "#version 330 core\n"
     "    vec3 norm = normalize(Normal);\n"
     "    vec3 lightDir = normalize(lightPos - FragPos);\n"
     "    float diff = max(dot(norm, lightDir), 0.0);\n"
-    "    vec3 ambient = vec3(0.2f, 0.0f, 0.2f);\n"
-    "    vec3 diffuse = diff * vec3(1.0f, 1.0f, 0.8f);\n"
-    "    vec3 result = (ambient + diffuse) * vec3(1.0f, 0.5f, 0.7f);\n"
+    "    vec3 ambient = vec3(0.4f, 0.0f, 0.4f);\n"
+    "    vec3 diffuse = diff * vec3(1.0f, 1.0f, 0.7f);\n"
+    "    vec3 result = (ambient + diffuse) * vec3(1.0f, 0.8f, 0.8f);\n"
     "    FragColor = vec4(result, 1.0);\n"
     "}\0";
 
@@ -71,6 +75,8 @@ void processInput(GLFWwindow* window) {
         y_angle += 0.5;
 }
 
+/*  Compiles the vertex and fragment shaders, then links them to a shader program object
+ */
 void createAndLinkProgram(unsigned int *program) {
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -153,7 +159,8 @@ int main() {
     double *vertices = new double[vertices_size];
     unsigned int *indices = new unsigned int[indices_size];
     Fabric* sheet = new Fabric(WIDTH, WIDTH, vertices, indices);
-    sheet->fix(10, 10);
+    sheet->fix(7, 7);
+    sheet->fix(17, 5);
 
     unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
@@ -180,8 +187,7 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
-        // rendering commands
-        glClearColor(0.1f, 0.0f, 0.3f, 1.0f);
+        glClearColor(0.2f, 0.1f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
@@ -194,7 +200,7 @@ int main() {
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
         projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -30.0f));
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -50.0f));
 
         ptr = glGetUniformLocation(shaderProgram, "projection");
         glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(projection));
@@ -204,11 +210,12 @@ int main() {
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(x_angle), glm::vec3(1.0, 0.0, 0.0));
         model = glm::rotate(model, glm::radians(y_angle), glm::vec3(0.0, 1.0, 0.0));
-        model = glm::translate(model, glm::vec3(-9.5f, 10.0f, -9.5f));
+        model = glm::translate(model, glm::vec3(-14.5f, 10.0f, -14.5f));
 
         ptr = glGetUniformLocation(shaderProgram, "model");
         glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(model));
 
+        // Steps forward the animation
         sheet->step();
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
