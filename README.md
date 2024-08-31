@@ -7,3 +7,4 @@ Use WASD to rotate the fabric
 
 ![alt text](screenshots/drape2.png)
 ![alt text](screenshots/pulledthread.png)
+![alt text](screenshots/slidingimg.png)
