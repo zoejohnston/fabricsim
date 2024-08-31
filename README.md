@@ -1,4 +1,4 @@
-# Yarn-level Cloth Simulator
+# Yarn-Level Cloth Simulator
 Uses OpenGL 3.3
 
 Dependent on GLAD, GLFW, and GLM
