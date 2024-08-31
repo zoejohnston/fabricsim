@@ -4,6 +4,7 @@
 #include "ContactNode.h"
 #include "Strand.h"
 #include <cmath>
+#include <iostream>
 
 /*	Zoe Johnston
  */

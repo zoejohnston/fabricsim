@@ -57,6 +57,7 @@ const char* fragmentShaderSource = "#version 330 core\n"
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void createAndLinkProgram(unsigned int* program);
+void setUniforms(unsigned int program);
 
 /*  Main
  */
@@ -66,7 +67,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Fabric Simulation", NULL, NULL);
 
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -130,27 +131,7 @@ int main() {
         glUseProgram(shaderProgram);
         glLineWidth(5.0);
 
-        unsigned int ptr;
-        ptr = glGetUniformLocation(shaderProgram, "lightPos");
-        glUniform3fv(ptr, 1, glm::value_ptr(lightPos));
-
-        glm::mat4 view = glm::mat4(1.0f);
-        glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -50.0f));
-
-        ptr = glGetUniformLocation(shaderProgram, "projection");
-        glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(projection));
-        ptr = glGetUniformLocation(shaderProgram, "view");
-        glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(view));
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(x_angle), glm::vec3(1.0, 0.0, 0.0));
-        model = glm::rotate(model, glm::radians(y_angle), glm::vec3(0.0, 1.0, 0.0));
-        model = glm::translate(model, glm::vec3(-14.5f, 10.0f, -14.5f));
-
-        ptr = glGetUniformLocation(shaderProgram, "model");
-        glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(model));
+        setUniforms(shaderProgram);
 
         // Steps forward the animation
         sheet->step();
@@ -242,4 +223,30 @@ void createAndLinkProgram(unsigned int* program) {
     glDeleteShader(fragmentShader);
 
     *program = shaderProgram;
+}
+
+/*  Sets up shader uniforms
+ */
+void setUniforms(unsigned int program) {
+    unsigned int ptr;
+    ptr = glGetUniformLocation(program, "lightPos");
+    glUniform3fv(ptr, 1, glm::value_ptr(lightPos));
+
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -50.0f));
+
+    ptr = glGetUniformLocation(program, "projection");
+    glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(projection));
+    ptr = glGetUniformLocation(program, "view");
+    glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(view));
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(x_angle), glm::vec3(1.0, 0.0, 0.0));
+    model = glm::rotate(model, glm::radians(y_angle), glm::vec3(0.0, 1.0, 0.0));
+    model = glm::translate(model, glm::vec3(-14.5f, 10.0f, -14.5f));
+
+    ptr = glGetUniformLocation(program, "model");
+    glUniformMatrix4fv(ptr, 1, GL_FALSE, glm::value_ptr(model));
 }
